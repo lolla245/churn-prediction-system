@@ -2,10 +2,9 @@ from fastapi import FastAPI
 import joblib
 import numpy as np
 import os
-import uvicorn
 
 # ----------------------------
-# Paths (FIXED - NO HARD CODE)
+# Paths (Render-safe)
 # ----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "..", "models")
@@ -18,7 +17,7 @@ scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
 kmeans = joblib.load(os.path.join(MODEL_DIR, "kmeans.pkl"))
 
 # ----------------------------
-# App init (ONLY ONCE)
+# App init
 # ----------------------------
 app = FastAPI(title="Churn Prediction API")
 
@@ -63,9 +62,3 @@ def predict(data: dict):
         "cluster": int(cluster),
         "recommendation": recommendation
     }
-
-# ----------------------------
-# Run server
-# ----------------------------
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
