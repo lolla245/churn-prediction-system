@@ -15,15 +15,29 @@ st.write("Enter customer details to predict churn risk + recommendations")
 # SAFE PATH FIX (IMPORTANT)
 # ----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "..", "models")
+MODEL_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "models"))
+
+# Debug (VERY useful for deployment)
+st.write("📂 Model directory:", MODEL_DIR)
 
 # ----------------------------
-# Load models
+# Load models (SAFE)
 # ----------------------------
+def load_file(filename):
+    path = os.path.join(MODEL_DIR, filename)
+
+    # Debug check
+    if not os.path.exists(path):
+        st.error(f"❌ File not found: {filename}")
+        st.write("Available files:", os.listdir(MODEL_DIR) if os.path.exists(MODEL_DIR) else "Folder missing")
+        st.stop()
+
+    return joblib.load(path)
+
 try:
-    model = joblib.load(os.path.join(MODEL_DIR, "churn_model.pkl"))
-    scaler = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
-    kmeans = joblib.load(os.path.join(MODEL_DIR, "kmeans.pkl"))
+    model = load_file("churn_model.pkl")
+    scaler = load_file("scaler.pkl")
+    kmeans = load_file("kmeans.pkl")
 except Exception as e:
     st.error(f"❌ Model loading failed: {e}")
     st.stop()
@@ -35,17 +49,15 @@ def get_recommendation(churn_prob, cluster):
 
     if churn_prob > 0.75:
         return "High Risk: Offer discount + priority support"
-
     elif churn_prob > 0.4:
         return "Medium Risk: Send engagement emails"
-
     else:
         return "Stable Customer → Loyalty program"
 
 # ----------------------------
 # INPUT (10 FEATURES)
 # ----------------------------
-st.subheader("📥 Enter Customer Details")
+st.subheader("Enter Customer Details")
 
 col1, col2 = st.columns(2)
 
@@ -88,7 +100,7 @@ if st.button("🚀 Predict Churn"):
 
     recommendation = get_recommendation(churn_prob, cluster)
 
-    st.subheader("📊 Results")
+    st.subheader("Results")
 
     st.metric("Churn Probability", f"{churn_prob:.2f}")
     st.metric("Cluster", int(cluster))
